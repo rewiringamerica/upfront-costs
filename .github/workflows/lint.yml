@@ -1,0 +1,51 @@
+# Run various lint checks, like ruff and black, to make sure
+# our code remains in good shape, avoids common bugs, and follows
+# common coding  conventions.
+name: lint
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - uses: actions/checkout@v4
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          cache: 'poetry'
+
+      #----------------------------------------------
+      #       install linting packages
+      #----------------------------------------------
+      - name: Use poetry to install linters
+        run: poetry install --only dev --no-plugins
+      #----------------------------------------------
+      #          run ruff
+      #----------------------------------------------
+      - name: Run ruff
+        run: poetry run ruff check ./src ./tests
+      #----------------------------------------------
+      #          run black
+      #----------------------------------------------
+      - name: Run black
+        run: poetry run black ./src ./tests --diff --check
+      #----------------------------------------------
+      #          run pylint
+      #----------------------------------------------
+      - name: Run pylint
+        run: poetry run pylint ./src
+        continue-on-error: true
