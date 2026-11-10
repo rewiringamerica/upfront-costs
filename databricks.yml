@@ -1,0 +1,19 @@
+# This is a Databricks asset bundle definition for upfront-costs.
+# The Databricks extension requires databricks.yml configuration file.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+
+bundle:
+  name: upfront-costs
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://4617764665359845.5.gcp.databricks.com
+
+  ## Optionally, there could be 'staging' or 'prod' targets here.
+  #
+  # prod:
+  #   workspace:
+  #     host: https://4617764665359845.5.gcp.databricks.com

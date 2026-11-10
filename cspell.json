@@ -1,0 +1,16 @@
+// This is a config file for cspell. Read https://cspell.org/docs/Configuration#cspelljson
+// for details on what options are available.
+{
+    "version": "0.2",
+    // Ignore some file types
+    "ignorePaths": [
+        "**/*.sh",
+        "**/*.lock",
+        "**/*.txt"
+    ],
+    // Use custom dictionary
+    "dictionaryDefinitions": [
+        {"name": "upfront_costs_dict", "path": "./.cspell/upfront_costs_dict.txt" }
+    ],
+    "dictionaries": ["upfront_costs_dict"]
+}
