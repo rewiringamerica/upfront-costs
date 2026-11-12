@@ -3,9 +3,9 @@ name = "upfront-costs"
 version = "1.5.1"
 description = "Collecting, standardizing, and analyzing data on the upfront costs of electrification."
 package-mode = false
-authors = ["Tarren Peterson <tarren@rewiringamerica.org>", "Ryan Treves <ryan@rewiringamerica.org>", "Talor Gruenwald <talor@rewiringamerica.org>"]
+authors = ["Ryan Treves <ryan@rewiringamerica.org>", "Miki Verma <miki@rewiringamerica.org>", "Tarren Peterson", "Talor Gruenwald"]
 readme = "README.md"
-license = "LICENSE.md"
+license = "license.md"
 
 [[tool.poetry.source]]
 name = "rewiring-america-python-repo"
