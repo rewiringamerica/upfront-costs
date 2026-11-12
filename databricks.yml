@@ -55,8 +55,6 @@ targets:
       email_notifications:
         type: complex
         default:
-          on_start:
-            - ${workspace.current_user.userName}
           on_success:
             - ${workspace.current_user.userName}
           on_failure:
