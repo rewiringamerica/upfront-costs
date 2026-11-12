@@ -1,0 +1,182 @@
+resources:
+  jobs:
+    Upfront_costs:
+      name: Upfront costs
+      description: Produces estimates of upfront costs for various home
+        appliances/electrification upgrades.
+      tasks:
+        - task_key: generate_gshp_training_features
+          notebook_task:
+            notebook_path: src/1_generate/generate_gshp_training_features
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_range_dryer_costs
+          notebook_task:
+            notebook_path: src/3_predict/predict_range_dryer_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_weatherization_costs
+          notebook_task:
+            notebook_path: src/3_predict/predict_weatherization_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: process_ev_data
+          notebook_task:
+            notebook_path: src/0_process/process_ev_data
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_ev_costs
+          depends_on:
+            - task_key: process_ev_data
+          notebook_task:
+            notebook_path: src/3_predict/predict_ev_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: process_lbnl_rooftop_solar
+          notebook_task:
+            notebook_path: src/0_process/process_lbnl_rooftop_solar
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: generate_solar_training_features
+          depends_on:
+            - task_key: process_lbnl_rooftop_solar
+          notebook_task:
+            notebook_path: src/1_generate/generate_solar_training_features
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: process_mass_saves_ashp
+          notebook_task:
+            notebook_path: src/0_process/process_mass_saves_ashp
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: process_mass_saves_wholehome
+          notebook_task:
+            notebook_path: src/0_process/process_mass_saves_wholehome
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: process_tech_clean_ca
+          notebook_task:
+            notebook_path: src/0_process/process_tech_clean_ca
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: generate_ashp_hpwh_training_features
+          depends_on:
+            - task_key: process_mass_saves_ashp
+            - task_key: process_mass_saves_wholehome
+            - task_key: process_tech_clean_ca
+          notebook_task:
+            notebook_path: src/1_generate/generate_ashp_hpwh_training_features
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_hpwh_wiring_panel_charger_costs
+          depends_on:
+            - task_key: generate_ashp_hpwh_training_features
+          notebook_task:
+            notebook_path: src/3_predict/predict_hpwh_wiring_panel_charger_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: train_ashp_quantile_regressor
+          depends_on:
+            - task_key: generate_ashp_hpwh_training_features
+          notebook_task:
+            notebook_path: src/2_train/train_ashp_quantile_regressor
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_ashp_costs
+          depends_on:
+            - task_key: train_ashp_quantile_regressor
+          notebook_task:
+            notebook_path: src/3_predict/predict_ashp_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+          max_retries: 2
+          min_retry_interval_millis: 30000
+        - task_key: train_gshp_xgboost_regressor
+          depends_on:
+            - task_key: generate_gshp_training_features
+          notebook_task:
+            notebook_path: src/2_train/train_gshp_xgboost_regressor
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_gshp_costs
+          depends_on:
+            - task_key: train_gshp_xgboost_regressor
+          notebook_task:
+            notebook_path: src/3_predict/predict_gshp_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+          max_retries: 2
+          min_retry_interval_millis: 30000
+        - task_key: train_solar_quantile_regressor
+          depends_on:
+            - task_key: generate_solar_training_features
+          notebook_task:
+            notebook_path: src/2_train/train_solar_quantile_regressor
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+        - task_key: predict_solar_costs
+          depends_on:
+            - task_key: train_solar_quantile_regressor
+          notebook_task:
+            notebook_path: src/3_predict/predict_solar_costs
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+          max_retries: 2
+          min_retry_interval_millis: 30000
+        - task_key: combine_cost_predictions
+          depends_on:
+            - task_key: predict_weatherization_costs
+            - task_key: predict_hpwh_wiring_panel_charger_costs
+            - task_key: predict_solar_costs
+            - task_key: predict_range_dryer_costs
+            - task_key: predict_ashp_costs
+            - task_key: predict_ev_costs
+            - task_key: predict_gshp_costs
+          notebook_task:
+            notebook_path: src/4_combine/combine_cost_predictions
+            source: GIT
+          job_cluster_key: Upfront-costs_job_cluster
+      job_clusters:
+        - job_cluster_key: Upfront-costs_job_cluster
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            gcp_attributes:
+              google_service_account: datascience-dev@rewiring-america.iam.gserviceaccount.com
+              availability: ON_DEMAND_GCP
+              zone_id: HA
+            node_type_id: n2-highmem-4
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            init_scripts:
+              - volumes:
+                  destination: /Volumes/dataops/upfront_costs/init_scripts/install-db-requirements.sh
+            data_security_mode: DATA_SECURITY_MODE_DEDICATED
+            runtime_engine: STANDARD
+            kind: CLASSIC_PREVIEW
+            use_ml_runtime: true
+            is_single_node: false
+            num_workers: 8
+      git_source:
+        git_url: https://github.com/rewiringamerica/upfront-costs
+        git_provider: gitHub
+        git_branch: main
+      tags:
+        frequency: adhoc
+        repo: upfront-costs
+      queue:
+        enabled: true
+      parameters:
+        - name: building_set
+          default: ResStock 2024.2
+        - name: mode
+          default: main
+        - name: re_geocode
+          default: "False"
+      environments:
+        - environment_key: Default
+          spec:
+            environment_version: "4"
+
+permissions:
+  - user_name: ryan@rewiringamerica.org
+    level: IS_OWNER
