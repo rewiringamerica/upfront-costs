@@ -104,8 +104,7 @@ The full pipeline is defined as a Databricks Asset Bundle job in `resources/upfr
 
 1. Create a temporary commit that:
    1. Changes `git_branch` in the YAML from `main` to the name of your feature branch.
-   2. Changes the `mode` parameter default to `feature`.
-   3. If you have made changes to the project environment and init script (see [Updating Requirements](#updating-requirements)):
+   2. If you have made changes to the project environment and init script (see [Updating Requirements](#updating-requirements)):
       1. Check out your feature branch in your Databricks workspace Git folder (`Workspace/Repos/<your email>/upfront-costs`), and copy the path to the init script in that folder.
       2. In the YAML file's job cluster definition, change the init script destination to `/Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh`. Since this is a workspace file rather than a volume, also change the `volumes` key to `workspace`:
 
@@ -115,7 +114,7 @@ The full pipeline is defined as a Databricks Asset Bundle job in `resources/upfr
                destination: /Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh
          ```
 
-2. Deploy your own copy of the job to the dev target with `databricks bundle deploy -t dev`, then run the job.
+2. Deploy your own copy of the job to the dev target with `databricks bundle deploy -t dev`, then run the job. The dev target sets the `mode` parameter to `feature`, so outputs are written to feature tables rather than overwriting the `main` tables.
 3. Before merging revert your commit from 1. with `git revert`.
 
 #### Updating Requirements

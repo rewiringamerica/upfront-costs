@@ -4,6 +4,8 @@ resources:
       name: Upfront costs
       description: Produces estimates of upfront costs for various home
         appliances/electrification upgrades.
+      email_notifications: ${var.email_notifications}
+      webhook_notifications: ${var.webhook_notifications}
       tasks:
         - task_key: generate_gshp_training_features
           notebook_task:
@@ -162,6 +164,7 @@ resources:
         git_branch: main
       tags:
         frequency: adhoc
+        env: ${var.env}
         repo: upfront-costs
       queue:
         enabled: true
@@ -169,14 +172,10 @@ resources:
         - name: building_set
           default: ResStock 2024.2
         - name: mode
-          default: main
+          default: ${var.mode}
         - name: re_geocode
           default: "False"
       environments:
         - environment_key: Default
           spec:
             environment_version: "4"
-
-permissions:
-  - user_name: ryan@rewiringamerica.org
-    level: IS_OWNER
