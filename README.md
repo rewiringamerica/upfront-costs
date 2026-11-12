@@ -22,8 +22,9 @@ Pipeline code is stored in the `src/` subdirectory, with a detailed methodology 
 
 ```text
 upfront-costs/
-├── .github/workflows/           # CI: lint, tests, and pushing the init script to Databricks
+├── .github/workflows/           # CI: lint, tests, and pushing init script & DAB to Databricks
 ├── exploratory/                 # Exploratory analysis of ASHP training data
+├── resources/                   # Databricks asset bundle job definition
 ├── src/
 │   ├── 0_process/               # Clean raw data sources
 │   ├── 1_generate/              # Generate training features
@@ -77,7 +78,9 @@ Bug reports and feature requests can be submitted via Github Issues. For questio
 
 For a guide to setting up local development with python, poetry, and gcloud, see the [dml-utils README](https://github.com/rewiringamerica/dml-utils/blob/main/README.md#one-time-setup).
 
-The pipeline should be run in the following order:
+Use the Upfront costs databricks job to run part or all of the production pipeline.
+
+The pipeline runs in the following order:
 
 1. `src/0_process/`
 2. `src/1_generate/`
@@ -95,6 +98,24 @@ The models are currently used to predict the upfront cost of various appliances 
 
 Each trained model and saved table is tagged by the release version at the time of creation, distinguishing the artifacts from earlier versions.
 If there are any pipeline changes, whether by changing data sources, adding new features, or implementing a new model, the release version in the repository should be incremented.  **Please read [this guide](https://github.com/rewiringamerica/dml-utils/blob/main/README.md#increment-the-version) to versioning before incrementing.** By incrementing, the training pipeline will generate new feature tables and save a new version of each model, all tagged with the new release version number. This will allow us to quickly revert to a previous version of the pipeline if we encounter issues with model/data drift.
+
+#### Testing Changes with the Dev Job
+
+The full pipeline is defined as a Databricks Asset Bundle job in `resources/upfront_costs_job.yml`. To test changes on your branch end-to-end, do the following:
+
+1. Push your branch to GitHub. The dev job runs notebooks from whichever branch you have checked out locally when you deploy.
+2. If you have made changes to the project environment and init script (see [Updating Requirements](#updating-requirements)), create a temporary commit that points the job at your branch's init script:
+   1. Check out your feature branch in your Databricks workspace Git folder (`Workspace/Repos/<your email>/upfront-costs`), and copy the path to the init script in that folder.
+   2. In the YAML file's job cluster definition, change the init script destination to `/Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh`. Since this is a workspace file rather than a volume, also change the `volumes` key to `workspace`:
+
+      ```yaml
+      init_scripts:
+        - workspace:
+            destination: /Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh
+      ```
+
+3. Deploy your own copy of the job to the dev target with `databricks bundle deploy -t dev`, then run the job. The dev target sets the `mode` parameter to `feature`, so outputs are written to feature tables rather than overwriting the `main` tables.
+4. If you made a temporary commit in step 2, revert it with `git revert` before merging.
 
 #### Updating Requirements
 

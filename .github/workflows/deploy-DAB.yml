@@ -1,0 +1,31 @@
+# Deploy Databricks Automated Deployment Bundle
+
+name: Deploy to Databricks
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    env:
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_HOST: https://4617764665359845.5.gcp.databricks.com/
+      # This is the ID of the `github-actions` service principal
+      DATABRICKS_CLIENT_ID: a97b46fd-8e80-43a6-a918-85d0be954a6d
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Databricks CLI Setup
+      uses: databricks/setup-cli@main
+
+    - name: Deploy Databricks bundle
+      run: databricks bundle deploy --target prod
