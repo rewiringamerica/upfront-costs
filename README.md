@@ -69,9 +69,9 @@ Running the code in this repo requires access to internal Rewiring America depen
 
 However, external users may access and use some models attached to specific releases (see "Releases" under "About"). Note that without access to RSMeans geographic adjustment factors, predictions from these models out of the box will be national and not location-specific. Additional details on model usage are included in each associated release.
 
-### Contact
+### Contributing
 
-For questions, updates, or to join our open source community, please reach out to `opensource@rewiringamerica.org`.
+See [this page](CONTRIBUTING.md) for contribution guidelines.
 
 ## Internal users
 
