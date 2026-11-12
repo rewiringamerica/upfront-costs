@@ -103,3 +103,7 @@ targets:
       # github-actions service principal can manage the job
       - service_principal_name: a97b46fd-8e80-43a6-a918-85d0be954a6d
         level: CAN_MANAGE
+    
+    # Jobs in prod run as the prod-job-runner service principal.
+    run_as:
+      service_principal_name: 8bc805bb-e9b9-4381-a3b1-c68c9781bcc6
