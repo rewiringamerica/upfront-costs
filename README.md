@@ -22,8 +22,8 @@ Pipeline code is stored in the `src/` subdirectory, with a detailed methodology 
 
 ```text
 upfront-costs/
-├── .github/workflows/           # CI: lint, tests, and pushing the init script to Databricks
 ├── exploratory/                 # Exploratory analysis of ASHP training data
+├── resources/                   # Databricks asset bundle job definition
 ├── src/
 │   ├── 0_process/               # Clean raw data sources
 │   ├── 1_generate/              # Generate training features
@@ -102,20 +102,19 @@ If there are any pipeline changes, whether by changing data sources, adding new 
 
 The full pipeline is defined as a Databricks Asset Bundle job in `resources/upfront_costs_job.yml`. To test changes on your branch end-to-end, do the following:
 
-1. Create a temporary commit that:
-   1. Changes `git_branch` in the YAML from `main` to the name of your feature branch.
-   2. If you have made changes to the project environment and init script (see [Updating Requirements](#updating-requirements)):
-      1. Check out your feature branch in your Databricks workspace Git folder (`Workspace/Repos/<your email>/upfront-costs`), and copy the path to the init script in that folder.
-      2. In the YAML file's job cluster definition, change the init script destination to `/Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh`. Since this is a workspace file rather than a volume, also change the `volumes` key to `workspace`:
+1. Push your branch to GitHub. The dev job runs notebooks from whichever branch you have checked out locally when you deploy.
+2. If you have made changes to the project environment and init script (see [Updating Requirements](#updating-requirements)), create a temporary commit that points the job at your branch's init script:
+   1. Check out your feature branch in your Databricks workspace Git folder (`Workspace/Repos/<your email>/upfront-costs`), and copy the path to the init script in that folder.
+   2. In the YAML file's job cluster definition, change the init script destination to `/Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh`. Since this is a workspace file rather than a volume, also change the `volumes` key to `workspace`:
 
-         ```yaml
-         init_scripts:
-           - workspace:
-               destination: /Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh
-         ```
+      ```yaml
+      init_scripts:
+        - workspace:
+            destination: /Workspace/Repos/<your email>/upfront-costs/install-db-requirements.sh
+      ```
 
-2. Deploy your own copy of the job to the dev target with `databricks bundle deploy -t dev`, then run the job. The dev target sets the `mode` parameter to `feature`, so outputs are written to feature tables rather than overwriting the `main` tables.
-3. Before merging revert your commit from 1. with `git revert`.
+3. Deploy your own copy of the job to the dev target with `databricks bundle deploy -t dev`, then run the job. The dev target sets the `mode` parameter to `feature`, so outputs are written to feature tables rather than overwriting the `main` tables.
+4. If you made a temporary commit in step 2, revert it with `git revert` before merging.
 
 #### Updating Requirements
 

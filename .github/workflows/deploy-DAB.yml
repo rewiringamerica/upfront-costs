@@ -20,7 +20,6 @@ jobs:
       DATABRICKS_HOST: https://4617764665359845.5.gcp.databricks.com/
       # This is the ID of the `github-actions` service principal
       DATABRICKS_CLIENT_ID: a97b46fd-8e80-43a6-a918-85d0be954a6d
-      BRANCH_NAME: ${{ github.ref_name }}
 
     steps:
     - uses: actions/checkout@v4

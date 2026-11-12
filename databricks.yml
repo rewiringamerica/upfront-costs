@@ -27,6 +27,8 @@ variables:
     description: The job mode ("main" or "feature")
   env:
     description: Environment ("dev", "prod") used for tagging the job
+  git_branch:
+    description: The GitHub branch the job runs notebooks from
   email_notifications:
     description: Email notification settings
   webhook_notifications:
@@ -46,6 +48,8 @@ targets:
     variables:
       mode: feature
       env: dev
+      # Run notebooks from the locally checked-out branch (it must be pushed to GitHub)
+      git_branch: ${bundle.git.branch}
 
       # In dev, only send notifications to the owner
       email_notifications:
@@ -74,6 +78,7 @@ targets:
     variables:
       mode: main
       env: prod
+      git_branch: main
 
       # In prod, send notifications to the team
       email_notifications:

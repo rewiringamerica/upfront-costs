@@ -161,7 +161,7 @@ resources:
       git_source:
         git_url: https://github.com/rewiringamerica/upfront-costs
         git_provider: gitHub
-        git_branch: main
+        git_branch: ${var.git_branch}
       tags:
         frequency: adhoc
         env: ${var.env}
@@ -175,7 +175,3 @@ resources:
           default: ${var.mode}
         - name: re_geocode
           default: "False"
-      environments:
-        - environment_key: Default
-          spec:
-            environment_version: "4"
