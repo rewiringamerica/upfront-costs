@@ -22,6 +22,7 @@ Pipeline code is stored in the `src/` subdirectory, with a detailed methodology 
 
 ```text
 upfront-costs/
+├── .github/workflows/           # CI: lint, tests, and pushing init script & DAB to Databricks
 ├── exploratory/                 # Exploratory analysis of ASHP training data
 ├── resources/                   # Databricks asset bundle job definition
 ├── src/
