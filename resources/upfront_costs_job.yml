@@ -142,6 +142,7 @@ resources:
         - job_cluster_key: Upfront-costs_job_cluster
           new_cluster:
             spark_version: 15.4.x-scala2.12
+            policy_id: : 00FC00F52EACC61
             gcp_attributes:
               google_service_account: datascience-dev@rewiring-america.iam.gserviceaccount.com
               availability: ON_DEMAND_GCP
