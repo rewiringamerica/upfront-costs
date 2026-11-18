@@ -2,6 +2,8 @@
 
 The methodology for Rewiring America’s upfront cost estimates is slightly different for each type of electrification upgrade. These upgrades can be grouped into two categories: those we assume have *location-varying* costs (for example, a heat pump installation in San Francisco, CA is likely to be more expensive than a heat pump installation in Montgomery, AL), and those we assume have *location-invariant* costs (e.g., we assume an induction stove costs the same no matter where you are).
 
+**Note: all upfront cost estimates represent total project costs, including equipment, installation, permitting (if applicable), and any other costs.** Estimates for [stoves and dryers](#stoves-and-dryers) assume no installation costs.
+
 ## Location-Varying Upfront Costs
 
 Upgrades we assume to have location-varying upfront costs include air-source and ground-source heat pumps, heat pump water heaters, panels & wiring, insulation, and solar.
