@@ -115,7 +115,7 @@ The full pipeline is defined as a Databricks Asset Bundle job in `resources/upfr
       ```
 
 3. Deploy your own copy of the job to the dev target with `databricks bundle deploy -t dev`, then run the job. The dev target sets the `mode` parameter to `feature`, so outputs are written to feature tables rather than overwriting the `main` tables.
-4. Once the test is complete, discard your local change from (2).
+4. Once the test is complete, if you made any local change in (2), discard it.
 
 #### Updating Requirements
 
