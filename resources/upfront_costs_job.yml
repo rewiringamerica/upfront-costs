@@ -4,7 +4,6 @@ resources:
       name: Upfront costs
       description: Produces estimates of upfront costs for various home
         appliances/electrification upgrades.
-      email_notifications: ${var.email_notifications}
       webhook_notifications: ${var.webhook_notifications}
       tasks:
         - task_key: generate_gshp_training_features

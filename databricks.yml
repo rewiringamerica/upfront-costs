@@ -29,8 +29,6 @@ variables:
     description: Environment ("dev", "prod") used for tagging the job
   git_branch:
     description: The GitHub branch the job runs notebooks from
-  email_notifications:
-    description: Email notification settings
   webhook_notifications:
     description: Webhook notification settings
 
@@ -51,16 +49,7 @@ targets:
       # Run notebooks from the locally checked-out branch (it must be pushed to GitHub)
       git_branch: ${bundle.git.branch}
 
-      # In dev, only send notifications to the owner
-      email_notifications:
-        type: complex
-        default:
-          on_start: null
-          on_success:
-            - ${workspace.current_user.userName}
-          on_failure:
-            - ${workspace.current_user.userName}
-
+      # In dev, don't send notifications
       webhook_notifications:
         type: complex
         default:
@@ -80,13 +69,6 @@ targets:
       git_branch: main
 
       # In prod, send notifications to the team
-      email_notifications:
-        type: complex
-        default:
-          on_start: null
-          on_success: null
-          on_failure:
-            - datascience-jobs-notifications@rewiringamerica.org
       webhook_notifications:
         type: complex
         default:
