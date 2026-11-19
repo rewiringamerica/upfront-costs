@@ -117,7 +117,7 @@ already_has_appliance_cond = F.coalesce(
         & (F.col("c.appliance_option") == "Electric Resistance Range")
     )
     | (
-        # Don't join ER dryer costs to buildings with an ER dryer already
+        # Don't join ER dryer costs to buildings with an electric dryer already (note: no HP dryers in ResStock inputs yet)
         (F.col("b.in_clothes_dryer_fuel") == "Electricity")
         & (F.col("c.appliance_option") == "Electric Resistance Dryer")
     ),
