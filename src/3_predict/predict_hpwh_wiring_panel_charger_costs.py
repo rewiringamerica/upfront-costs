@@ -14,7 +14,8 @@
 # MAGIC - Wiring: take the difference in cost between projects replacing an electric resistance water
 # MAGIC heater and projects replacing a gas water heater in the TECH Clean CA data.
 # MAGIC - Heat pump water heaters: take the median price of a heat pump water heater install that is not
-# MAGIC replacing electric resistance, then subtract the wiring cost.
+# MAGIC replacing electric resistance, then subtract the wiring cost. Buildings that already have a heat pump water
+# MAGIC heater are excluded.
 # MAGIC - EV L2 charger: the estimated cost of an L2 charger is drawn from 2025 cost projections in the [2019 ICCT EV Charging Cost study](https://theicct.org/wp-content/uploads/2021/06/ICCT_EV_Charging_Cost_20190813.pdf).
 # MAGIC
 # MAGIC ### I/O
@@ -383,9 +384,14 @@ hpwh_upfront_cost = hpwh_upfront_cost_with_wiring.select(
 
 # COMMAND ----------
 
+# Don't produce HPWH costs for buildings that already have a heat pump water heater.
+# Note: currently no buildings in ResStock have a null water heater efficiency.
+already_has_hpwh_cond = F.coalesce(F.col("in_water_heater_efficiency").contains("Heat Pump"), F.lit(False))
+
 # Join national level HPHW cost estimate against each building ID
 buildings_with_hpwh_costs = (
-    building_set_metadata.select("building_id", "county_geoid")
+    building_set_metadata.filter(~already_has_hpwh_cond)
+    .select("building_id", "county_geoid")
     .join(hpwh_upfront_cost, how="cross")
     .withColumn("appliance_option", F.lit("Heat Pump Water Heater"))
 )
