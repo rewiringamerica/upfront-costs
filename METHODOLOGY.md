@@ -18,7 +18,7 @@ We use three large ASHP installation datasets to estimate ASHP upfront costs:
 
 - [Massachusetts Residential Air-Source Heat Pump Program](https://www.masscec.com/public-records-requests) (scroll to “Clean Heating and Cooling Project Databases”) | 21,000 projects, including 3,500 whole-home heat pumps | 2014-2019
 - [Massachusetts Whole Home Pilot](https://www.masscec.com/public-records-requests) (scroll to “Clean Heating and Cooling Project Databases”) | 158 projects, all whole-home heat pumps | 2019-2021
-- [TECH Clean California](https://techcleanca.com/heat-pump-data/heat-pump-data-visuals/) | 9,000 projects, all whole-home heat pumps | 2021-2022 (more updated data is available, but our model currently only incorporates data through 2022)
+- [TECH Clean California](https://techcleanca.com/heat-pump-data/heat-pump-data-visuals/) | 20,000 projects, all whole-home heat pumps | 2021-2024 (more updated data is available, but our model currently only incorporates data through 2024)
 
 For each project in the dataset, we adjust the cost to represent a present-day national average by correcting for inflation using a [Construction Price Index](https://fred.stlouisfed.org/series/PPIDCS) (since installations took place over the past decade) and correcting for location-specific materials & labor costs using RSMeans cost factors (since Massachusetts and California are relatively expensive markets). Based off this corrected data, we develop a quantile regression model that predicts ASHP cost given six pieces of information about a home. We used a quantile rather than a linear regression to capture the median project cost rather than the mean project cost, since the project cost distribution has a long upper tail.
 
