@@ -9,7 +9,7 @@
 # MAGIC ### Process
 # MAGIC 1. Hard-code appliance upfront costs based on desk research. Costs for ER dryers, ER ranges, and induction ranges are from [Home Depot](https://www.homedepot.com/b/Appliances/N-5yc1vZbv1w), [Lowe's](https://www.lowes.com/c/Appliances), and [Best Buy](https://www.bestbuy.com/site/electronics/home-appliances/abcat0900000.c?id=abcat0900000) as of May 2026. These cost estimates do not include installation costs.
 # MAGIC 2. Cross-join appliances with buildings
-# MAGIC 3. Set upfront costs to 0 for buildings which already have the appliances in question
+# MAGIC 3. Drop rows for buildings which already have the appliances in question
 # MAGIC
 # MAGIC ### I/O
 # MAGIC ##### Inputs:
@@ -103,7 +103,9 @@ range_dryer_costs = spark.createDataFrame(
 # Define the condition where a building already has the appliance
 # NOTE: these are lowest-level conditions that should apply no matter what upgrade eligibility logic is applied downstream.
 # These do not replace/represent upgrade eligibility logic.
-already_has_appliance_cond = (
+# Coalesce to False so buildings with null `in_electric_cooking_range_type` or `in_clothes_dryer_fuel`
+# (e.g., have gas ranges or no dryer) are treated as not already having the appliance.
+already_has_appliance_cond = F.coalesce(
     (
         # Don't join induction range costs to buildings with induction ranges already
         (F.col("b.in_electric_cooking_range_type") == "Induction")
@@ -118,25 +120,16 @@ already_has_appliance_cond = (
         # Don't join ER dryer costs to buildings with an ER dryer already
         (F.col("b.in_clothes_dryer_fuel") == "Electricity")
         & (F.col("c.appliance_option") == "Electric Resistance Dryer")
-    )
+    ),
+    F.lit(False),
 )
 
 # CrossJoin the tables
 range_dryer_cost_by_building = (
     building_set_metadata.alias("b")
     .crossJoin(range_dryer_costs.alias("c"))
-    # Conditionally set the costs to $0.0 if the condition is met, otherwise keep the estimated cost
-    .withColumn(
-        "upfront_cost_median", F.when(already_has_appliance_cond, 0.0).otherwise(F.col("c.upfront_cost_median"))
-    )
-    .withColumn(
-        "upfront_cost_20percentile",
-        F.when(already_has_appliance_cond, 0.0).otherwise(F.col("c.upfront_cost_20percentile")),
-    )
-    .withColumn(
-        "upfront_cost_80percentile",
-        F.when(already_has_appliance_cond, 0.0).otherwise(F.col("c.upfront_cost_80percentile")),
-    )
+    # Drop rows where the building already has the appliance
+    .filter(~already_has_appliance_cond)
     .select(
         "building_id",
         "appliance_option",
