@@ -4,7 +4,7 @@
 # MAGIC # Process TECH Clean CA Pricing Data
 # MAGIC
 # MAGIC ### Goal
-# MAGIC Process pricing data from TECH Clean CA (most recent pull was March 19, 2024)
+# MAGIC Process pricing data from TECH Clean CA (most recent pull was 11/19/2026)
 # MAGIC for use in upfront cost model training.
 # MAGIC
 # MAGIC ### Process
@@ -13,7 +13,7 @@
 # MAGIC - Write to delta table
 # MAGIC
 # MAGIC ### Inputs
-# MAGIC - `raw / pricing / TECHWorkingDataset_Single-Family_2024-03-19.csv`
+# MAGIC - `raw.upfront_costs.tech_working_dataset_single_family_2026_10_20`
 # MAGIC
 # MAGIC ### Outputs
 # MAGIC - `processed.upfront_costs.techcleanca`
@@ -59,14 +59,7 @@ PRICING_RAW_DATA_FPATH = G.RAW_DATA_FPATH / "pricing"
 # COMMAND ----------
 
 # read in TECH Clean CA data
-options = {"inferSchema": "true", "header": "true"}
-
-techcleanca_raw = (
-    spark.read.format("csv")
-    .options(**options)
-    .load(str(PRICING_RAW_DATA_FPATH / "TECHWorkingDataset_Single-Family_2024-03-19.csv"))
-)
-
+techcleanca_raw = spark.read.table("raw.upfront_costs.tech_working_dataset_single_family_2026_10_20")
 techcleanca = dcutil.clean_colnames(techcleanca_raw)
 
 # Nested geographies
@@ -83,7 +76,7 @@ column_renaming_dict = {
     "customer_county": "county",
     "customer_city": "city",
     "installation_start_date": "start_date",
-    "home_square_footage": "square_footage",
+    "total_living_floor_area_sq_ft": "square_footage",
     "total_project_cost_dollars": "project_cost_raw",
     "duct_replacement": "had_duct_replacement",
     "panel_upgrade": "had_panel_upgrade",
@@ -123,8 +116,7 @@ cost_techcleanca = (
 # Define values to replace with null
 values_to_replace = ["Removed during QA", "", " ", "Not provided"]
 
-# Replace the specified values with null for string column
-# s
+# Replace the specified values with null for string columns
 cost_techcleanca = cost_techcleanca.replace(
     values_to_replace,
     None,
