@@ -9,7 +9,7 @@
 # MAGIC ### Process
 # MAGIC - Load processed EV data from process_ev_data.py, which contains EV upfront costs by vehicle category and range.
 # MAGIC - Join to building metadata to produce a table of EV upfront costs by building.
-# MAGIC - Postprocessing: for newer BuildingSets, set estimated costs to 0 for the buildings with that EV already.
+# MAGIC - Postprocessing: for newer BuildingSets, drop rows for buildings with that EV already.
 # MAGIC
 # MAGIC ### I/O
 # MAGIC ##### Inputs:
@@ -103,24 +103,24 @@ if BUILDING_SET in [BuildingSet.RESSTOCK_2024_2, BuildingSet.RESSTOCK_2022_1, Bu
         how="cross",
     )
 else:
-    # For newer BuildingSets, set estimated costs to 0 for the buildings with that EV already
-    ev_upfront_cost_by_building_vehicle_category_range = ev_upfront_cost_by_vehicle_category_range.alias("e").join(
-        building_set_metadata.select(
-            "building_id", "in_electric_vehicle_battery", "in_electric_vehicle_ownership"
-        ).alias("b"),
-        how="cross",
+    # For newer BuildingSets, drop rows for buildings with that EV already.
+    # Coalesce to False so buildings with null `in_electric_vehicle_battery` or `in_electric_vehicle_ownership`
+    # are treated as not already having the EV.
+    already_has_ev_cond = F.coalesce(
+        (F.col("e.in_electric_vehicle_battery") == F.col("b.in_electric_vehicle_battery"))
+        & (F.col("b.in_electric_vehicle_ownership") == "Yes"),
+        F.lit(False),
     )
-    for column in ["upfront_cost_median", "upfront_cost_20percentile", "upfront_cost_80percentile"]:
-        ev_upfront_cost_by_building_vehicle_category_range = (
-            ev_upfront_cost_by_building_vehicle_category_range.withColumn(
-                column,
-                F.when(
-                    (F.col("e.in_electric_vehicle_battery") == F.col("b.in_electric_vehicle_battery"))
-                    & (F.col("b.in_electric_vehicle_ownership") == "Yes"),
-                    0.0,
-                ).otherwise(F.col(column)),
-            )
+    ev_upfront_cost_by_building_vehicle_category_range = (
+        ev_upfront_cost_by_vehicle_category_range.alias("e")
+        .join(
+            building_set_metadata.select(
+                "building_id", "in_electric_vehicle_battery", "in_electric_vehicle_ownership"
+            ).alias("b"),
+            how="cross",
         )
+        .filter(~already_has_ev_cond)
+    )
     # Drop the original EV column so the final table lists the upgrade EV
     ev_upfront_cost_by_building_vehicle_category_range = ev_upfront_cost_by_building_vehicle_category_range.drop(
         F.col("b.in_electric_vehicle_battery"), F.col("b.in_electric_vehicle_ownership")
