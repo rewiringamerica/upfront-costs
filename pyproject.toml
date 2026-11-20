@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "upfront-costs"
-version = "1.5.1"
+version = "1.5.2"
 description = "Collecting, standardizing, and analyzing data on the upfront costs of electrification."
 package-mode = false
 authors = ["Ryan Treves <ryan@rewiringamerica.org>", "Miki Verma <miki@rewiringamerica.org>", "Tarren Peterson", "Talor Gruenwald"]

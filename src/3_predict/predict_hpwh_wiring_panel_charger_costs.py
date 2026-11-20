@@ -9,10 +9,13 @@
 # MAGIC level is anchored to the median main-service-panel upgrade cost in this [2024 presentation](https://homes.lbl.gov/sites/default/files/2024-04/BPA_NHPC24-Affordable%20Electrification_final.pdf) by LBNL & NREL,
 # MAGIC and scaled across amperage tiers by a relative cost multiplier derived from RSMeans residential electric
 # MAGIC service assemblies and cross-checked against industry cost guides (see `PANEL_AMPERAGE_COST_MULTIPLIERS`).
+# MAGIC For BuildingSets with existing panel capacity (ResStock 2025+), panel upgrade options at or below the
+# MAGIC building's existing service rating are dropped.
 # MAGIC - Wiring: take the difference in cost between projects replacing an electric resistance water
 # MAGIC heater and projects replacing a gas water heater in the TECH Clean CA data.
 # MAGIC - Heat pump water heaters: take the median price of a heat pump water heater install that is not
-# MAGIC replacing electric resistance, then subtract the wiring cost.
+# MAGIC replacing electric resistance, then subtract the wiring cost. Buildings that already have a heat pump water
+# MAGIC heater are excluded.
 # MAGIC - EV L2 charger: the estimated cost of an L2 charger is drawn from 2025 cost projections in the [2019 ICCT EV Charging Cost study](https://theicct.org/wp-content/uploads/2021/06/ICCT_EV_Charging_Cost_20190813.pdf).
 # MAGIC
 # MAGIC ### I/O
@@ -185,6 +188,7 @@ PANEL_COST_PERCENTILES = {
 panel_cost_rows = [
     (
         f"Panel Upgrade {amperage}A",
+        amperage,
         float(round(PANEL_200A_MEDIAN_COST * multiplier)),
         *[float(round(cost * multiplier)) for cost in PANEL_COST_PERCENTILES.values()],
     )
@@ -195,15 +199,29 @@ panel_upfront_cost = spark.createDataFrame(
     panel_cost_rows,
     [
         "appliance_option",
+        "panel_amperage",
         "upfront_cost_median",
         *PANEL_COST_PERCENTILES.keys(),
     ],
 )
 
-# Cross join gives one row per (building, amperage tier), each a distinct "Panel Upgrade {amps}A" option.
-buildings_with_panel_costs = building_set_metadata.select("building_id", "county_geoid").join(
-    panel_upfront_cost, how="cross"
-)
+# Existing panel capacity (`in_electric_panel_service_rating`) is only available in ResStock 2025 and later.
+if "2024" in BUILDING_SET or "2022" in BUILDING_SET:
+    # Cross join gives one row per (building, amperage tier), each a distinct "Panel Upgrade {amps}A" option.
+    buildings_with_panel_costs = building_set_metadata.select("building_id", "county_geoid").join(
+        panel_upfront_cost, how="cross"
+    )
+else:
+    # Only keep panel upgrade options whose amperage exceeds the building's existing service rating.
+    # Note that no buildings in ResStock 2025+ have a null electrical panel service rating.
+    panel_upgrade_needed_cond = F.col("in_electric_panel_service_rating").cast("int") < F.col("panel_amperage")
+    buildings_with_panel_costs = (
+        building_set_metadata.select("building_id", "county_geoid", "in_electric_panel_service_rating")
+        .join(panel_upfront_cost, how="cross")
+        .filter(panel_upgrade_needed_cond)
+        .drop("in_electric_panel_service_rating")
+    )
+buildings_with_panel_costs = buildings_with_panel_costs.drop("panel_amperage")
 
 # COMMAND ----------
 
@@ -366,9 +384,14 @@ hpwh_upfront_cost = hpwh_upfront_cost_with_wiring.select(
 
 # COMMAND ----------
 
+# Don't produce HPWH costs for buildings that already have a heat pump water heater.
+# Note: currently no buildings in ResStock have a null water heater efficiency.
+already_has_hpwh_cond = F.coalesce(F.col("in_water_heater_efficiency").contains("Heat Pump"), F.lit(False))
+
 # Join national level HPHW cost estimate against each building ID
 buildings_with_hpwh_costs = (
-    building_set_metadata.select("building_id", "county_geoid")
+    building_set_metadata.filter(~already_has_hpwh_cond)
+    .select("building_id", "county_geoid")
     .join(hpwh_upfront_cost, how="cross")
     .withColumn("appliance_option", F.lit("Heat Pump Water Heater"))
 )
