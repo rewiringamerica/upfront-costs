@@ -130,7 +130,7 @@ common_cols = [
 upfront_cost_data = (
     ca_tech.select(
         *common_cols,
-        F.col("living_size_sqft").alias("sqft"),
+        F.col("square_footage").alias("sqft"),
         "had_panel_upgrade",
         "had_duct_replacement",
         "previous_wh_fuel_type",
